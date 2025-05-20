@@ -12,7 +12,7 @@ import {
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/icons/logo";
-import { LayoutDashboard, Brain, UsersRound, Lightbulb, Scan, Swords, UserSearch } from "lucide-react";
+import { LayoutDashboard, Brain, UsersRound, Lightbulb, Scan, Swords, UserSearch, Settings, User, Terminal } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -23,6 +23,12 @@ const navItems = [
   { href: "/positional-analysis", label: "Positional Analysis", icon: Scan },
   { href: "/match-up-analysis", label: "Match-Up Analysis", icon: Swords },
   { href: "/player-analysis", label: "Player Analysis", icon: UserSearch },
+];
+
+const utilityNavItems = [
+  { href: "/profile", label: "Profile", icon: User },
+  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/developer", label: "Developer", icon: Terminal },
 ];
 
 export function AppSidebar() {
@@ -36,7 +42,7 @@ export function AppSidebar() {
           <span className="group-data-[collapsible=icon]:hidden">Football Insights Lab</span>
         </Link>
       </SidebarHeader>
-      <SidebarContent className="p-2">
+      <SidebarContent className="p-2 flex flex-col justify-between">
         <SidebarMenu>
           {navItems.map((item) => (
             <SidebarMenuItem key={item.href}>
@@ -47,6 +53,26 @@ export function AppSidebar() {
                 className={cn(
                   "justify-start",
                   (pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))) && "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90 hover:text-sidebar-primary-foreground"
+                )}
+              >
+                <Link href={item.href}>
+                  <item.icon className="h-5 w-5" />
+                  <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+        <SidebarMenu className="mt-auto">
+          {utilityNavItems.map((item) => (
+            <SidebarMenuItem key={item.href}>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === item.href}
+                tooltip={{ children: item.label, className: "ml-1" }}
+                className={cn(
+                  "justify-start",
+                  pathname === item.href && "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90 hover:text-sidebar-primary-foreground"
                 )}
               >
                 <Link href={item.href}>
