@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes subtleDataFlow {
+  0% {
+    /* Initial positions for the two dot layers */
+    background-position: 0% 0%, 0% 0%;
+  }
+  100% {
+    /* End positions, creating a slow diagonal movement */
+    /* Different values create a subtle parallax effect */
+    background-position: 2000px 2000px, 2140px 2140px; /* Large values for slow, long cycle */
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 96.1%; /* Light gray #F5F5F5 */
@@ -84,6 +96,23 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    /* @apply bg-background text-foreground; - Replaced by direct CSS below for animation */
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+
+    /* Animated background layers */
+    background-image:
+      radial-gradient(hsla(var(--primary), 0.04) 1px, transparent 1.5px), /* Layer 1: Primary color dots */
+      radial-gradient(hsla(var(--accent), 0.03) 1px, transparent 1.5px);  /* Layer 2: Accent color dots */
+    background-size:
+      50px 50px, /* Pattern size for layer 1 */
+      70px 70px;  /* Pattern size for layer 2 (creates variation) */
+    background-repeat: repeat, repeat; /* Ensure patterns tile */
+    
+    animation: subtleDataFlow 120s linear infinite; /* Very slow animation, long cycle */
+
+    /* Helps ensure smooth rendering and containment */
+    overflow-x: hidden; 
+    position: relative; /* Context for potential future absolutely positioned children, though not strictly needed for background */
   }
 }
