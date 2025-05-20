@@ -1,14 +1,31 @@
 
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, useEffect } from "react";
 import { AppHeader } from "@/components/layout/app-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal, LogIn, ShieldAlert, LogOut } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Terminal, LogIn, ShieldAlert, LogOut, CheckCircle2, XCircle, Loader2, AlertCircle, Server, KeyRound, Database } from "lucide-react";
+import { getTeams } from "@/lib/data-service";
+
+interface TestResult {
+  name: string;
+  status: "pending" | "success" | "error" | "idle";
+  message: string;
+  metric?: string;
+  icon: JSX.Element;
+}
+
+const initialTestState: TestResult[] = [
+  { name: "API: /api/teams", status: "idle", message: "Not run yet.", icon: <Server className="h-4 w-4" /> },
+  { name: "API: /api/players", status: "idle", message: "Not run yet.", icon: <Server className="h-4 w-4" /> },
+  { name: "Environment Variables", status: "idle", message: "Not run yet.", icon: <KeyRound className="h-4 w-4" /> },
+  { name: "Data Service (getTeams)", status: "idle", message: "Not run yet.", icon: <Database className="h-4 w-4" /> },
+];
 
 export default function DeveloperPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -16,9 +33,12 @@ export default function DeveloperPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
+  const [testResults, setTestResults] = useState<TestResult[]>(initialTestState);
+  const [isTesting, setIsTesting] = useState(false);
+
   const handleLogin = (e: FormEvent) => {
     e.preventDefault();
-    setError(""); 
+    setError("");
     if (username === "admin" && password === "admin") {
       setIsAuthenticated(true);
     } else {
@@ -31,7 +51,73 @@ export default function DeveloperPage() {
     setUsername("");
     setPassword("");
     setError("");
+    setTestResults(initialTestState); // Reset test results on logout
   };
+
+  const updateTestResult = (name: string, newResult: Partial<TestResult>) => {
+    setTestResults(prevResults =>
+      prevResults.map(r => (r.name === name ? { ...r, ...newResult } : r))
+    );
+  };
+
+  const runIntegrityChecks = async () => {
+    setIsTesting(true);
+    setTestResults(initialTestState.map(test => ({ ...test, status: 'pending', message: 'Running...', icon: <Loader2 className="h-4 w-4 animate-spin" /> })));
+
+    // Check API: /api/teams
+    try {
+      const startTime = performance.now();
+      const response = await fetch("/api/teams");
+      const endTime = performance.now();
+      if (response.ok) {
+        await response.json(); // ensure body is readable
+        updateTestResult("API: /api/teams", { status: "success", message: "OK", metric: `${(endTime - startTime).toFixed(0)}ms`, icon: <CheckCircle2 className="h-4 w-4 text-green-500" /> });
+      } else {
+        updateTestResult("API: /api/teams", { status: "error", message: `Failed - Status ${response.status}`, icon: <XCircle className="h-4 w-4 text-red-500" /> });
+      }
+    } catch (e) {
+      updateTestResult("API: /api/teams", { status: "error", message: (e as Error).message, icon: <XCircle className="h-4 w-4 text-red-500" /> });
+    }
+
+    // Check API: /api/players
+    try {
+      const startTime = performance.now();
+      const response = await fetch("/api/players");
+      const endTime = performance.now();
+      if (response.ok) {
+         await response.json();
+        updateTestResult("API: /api/players", { status: "success", message: "OK", metric: `${(endTime - startTime).toFixed(0)}ms`, icon: <CheckCircle2 className="h-4 w-4 text-green-500" /> });
+      } else {
+        updateTestResult("API: /api/players", { status: "error", message: `Failed - Status ${response.status}`, icon: <XCircle className="h-4 w-4 text-red-500" /> });
+      }
+    } catch (e) {
+      updateTestResult("API: /api/players", { status: "error", message: (e as Error).message, icon: <XCircle className="h-4 w-4 text-red-500" /> });
+    }
+
+    // Check Environment Variables
+    const requiredEnvVars = ["NEXT_PUBLIC_APP_ENV", "NEXT_PUBLIC_API_BASE_URL"];
+    const missingVars = requiredEnvVars.filter(v => !process.env[v]);
+    if (missingVars.length === 0) {
+      updateTestResult("Environment Variables", { status: "success", message: "All required variables present.", icon: <CheckCircle2 className="h-4 w-4 text-green-500" /> });
+    } else {
+      updateTestResult("Environment Variables", { status: "error", message: `Missing: ${missingVars.join(", ")}`, icon: <XCircle className="h-4 w-4 text-red-500" /> });
+    }
+    
+    // Check Data Service (getTeams)
+    try {
+        const data = await getTeams();
+        if (data && data.length > 0) {
+            updateTestResult("Data Service (getTeams)", { status: "success", message: `OK - Loaded ${data.length} teams.`, icon: <CheckCircle2 className="h-4 w-4 text-green-500" /> });
+        } else {
+            updateTestResult("Data Service (getTeams)", { status: "success", message: "OK - Service resolved, but no data or empty data.", icon: <AlertCircle className="h-4 w-4 text-yellow-500" /> });
+        }
+    } catch (e) {
+        updateTestResult("Data Service (getTeams)", { status: "error", message: (e as Error).message, icon: <XCircle className="h-4 w-4 text-red-500" /> });
+    }
+
+    setIsTesting(false);
+  };
+
 
   if (!isAuthenticated) {
     return (
@@ -101,18 +187,18 @@ export default function DeveloperPage() {
         <Card className="shadow-lg border-primary/20">
           <CardHeader>
             <div className="flex justify-between items-start">
-                <div>
-                    <CardTitle className="flex items-center gap-2 text-2xl">
-                        <Terminal className="h-7 w-7 text-primary" />
-                        Developer Tools & Information
-                    </CardTitle>
-                    <CardDescription>
-                    This section provides tools and information for development and administrative purposes.
-                    </CardDescription>
-                </div>
-                <Button variant="outline" size="sm" onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" /> Log Out
-                </Button>
+              <div>
+                <CardTitle className="flex items-center gap-2 text-2xl">
+                  <Terminal className="h-7 w-7 text-primary" />
+                  Developer Tools & Information
+                </CardTitle>
+                <CardDescription>
+                  This section provides tools and information for development and administrative purposes.
+                </CardDescription>
+              </div>
+              <Button variant="outline" size="sm" onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" /> Log Out
+              </Button>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -128,21 +214,73 @@ export default function DeveloperPage() {
                 )}
               </AlertDescription>
             </Alert>
-            
-            <h3 className="text-lg font-semibold pt-2">Available Tools:</h3>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-lg border-border">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <ShieldAlert className="h-6 w-6 text-primary" />
+              App Integrity Checks
+            </CardTitle>
+            <CardDescription>
+              Run basic health checks on the application components and configurations.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button onClick={runIntegrityChecks} disabled={isTesting} className="w-full sm:w-auto">
+              {isTesting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <ShieldAlert className="mr-2 h-4 w-4" />
+              )}
+              Run Integrity Checks
+            </Button>
+            <Separator className="my-4" />
+            <div className="space-y-3">
+              {testResults.map(result => (
+                <Alert key={result.name} variant={result.status === 'error' ? 'destructive' : (result.status === 'success' ? 'default' : 'default')} 
+                       className={result.status === 'success' ? 'border-green-500/50' : (result.status === 'pending' ? 'border-blue-500/50' : 'border-border')}>
+                  {result.icon}
+                  <AlertTitle className="flex justify-between items-center">
+                    {result.name}
+                    {result.metric && <span className="text-xs font-normal text-muted-foreground">{result.metric}</span>}
+                  </AlertTitle>
+                  <AlertDescription>{result.message}</AlertDescription>
+                </Alert>
+              ))}
+            </div>
+          </CardContent>
+           <CardFooter>
+             <p className="text-xs text-muted-foreground">
+                These are client-side checks. For comprehensive monitoring, use dedicated backend health checks and logging.
+            </p>
+           </CardFooter>
+        </Card>
+
+        <Card className="shadow-lg border-border">
+          <CardHeader>
+             <CardTitle className="flex items-center gap-2 text-xl">
+                <Server className="h-6 w-6 text-primary"/>
+                Other Developer Tools
+            </CardTitle>
+            <CardDescription>Placeholder for future developer utilities.</CardDescription>
+          </CardHeader>
+          <CardContent>
             <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground pl-4">
-              <li>View application logs and debugging information.</li>
-              <li>Manage Genkit model configurations and test prompts.</li>
-              <li>Access data import/export utilities.</li>
-              <li>Control feature flags and experimental features.</li>
-              <li>Monitor API endpoint health and performance.</li>
-              <li>Clear application cache or reset mock data.</li>
+              <li>View application logs and debugging information (To be implemented).</li>
+              <li>Manage Genkit model configurations and test prompts (To be implemented).</li>
+              <li>Access data import/export utilities (To be implemented).</li>
+              <li>Control feature flags and experimental features (To be implemented).</li>
+              <li>Monitor API endpoint health and performance (Extended from above checks).</li>
+              <li>Clear application cache or reset mock data (To be implemented).</li>
             </ul>
              <p className="text-xs text-muted-foreground pt-4 border-t mt-6">
                 Session is client-side and will be lost on page refresh. For persistent admin sessions, a proper backend authentication system is required.
             </p>
           </CardContent>
         </Card>
+
       </main>
     </>
   );
