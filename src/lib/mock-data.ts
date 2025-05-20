@@ -12,11 +12,11 @@ export interface Team {
 export interface Game {
   id: number;
   name: string; // e.g., "Team A vs Team B"
-  date: string;
+  date: string; // Should be compatible with Python's date string "YYYY-MM-DD"
 }
 
 export interface ShotEvent {
-  id: number;
+  id: string; // Changed from number to string to accommodate UUID
   playerId: number;
   teamId: number;
   gameId: number;
@@ -73,12 +73,12 @@ export const mockGames: Game[] = [
 ];
 
 export const mockShotEvents: ShotEvent[] = [
-  { id: 1, playerId: 101, teamId: 1, gameId: 1001, x: 85, y: 50, isGoal: true, xg: 0.35 },
-  { id: 2, playerId: 101, teamId: 1, gameId: 1001, x: 70, y: 40, isGoal: false, xg: 0.12 },
-  { id: 3, playerId: 201, teamId: 2, gameId: 1001, x: 90, y: 60, isGoal: false, xg: 0.40 },
-  { id: 4, playerId: 202, teamId: 2, gameId: 1001, x: 75, y: 55, isGoal: true, xg: 0.22 },
-  { id: 5, playerId: 102, teamId: 1, gameId: 1003, x: 60, y: 30, isGoal: false, xg: 0.05 },
-  { id: 6, playerId: 301, teamId: 3, gameId: 1002, x: 88, y: 45, isGoal: true, xg: 0.30 },
+  { id: "abc-123-def-456", playerId: 101, teamId: 1, gameId: 1001, x: 85, y: 50, isGoal: true, xg: 0.35 },
+  { id: "ghi-789-jkl-012", playerId: 101, teamId: 1, gameId: 1001, x: 70, y: 40, isGoal: false, xg: 0.12 },
+  { id: "mno-345-pqr-678", playerId: 201, teamId: 2, gameId: 1001, x: 90, y: 60, isGoal: false, xg: 0.40 },
+  { id: "stu-901-vwx-234", playerId: 202, teamId: 2, gameId: 1001, x: 75, y: 55, isGoal: true, xg: 0.22 },
+  { id: "yza-567-bcd-890", playerId: 102, teamId: 1, gameId: 1003, x: 60, y: 30, isGoal: false, xg: 0.05 },
+  { id: "efg-123-hij-456", playerId: 301, teamId: 3, gameId: 1002, x: 88, y: 45, isGoal: true, xg: 0.30 },
 ];
 
 export const mockTeamPerformance: TeamPerformance[] = mockTeams.map(team => ({
