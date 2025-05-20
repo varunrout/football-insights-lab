@@ -121,6 +121,11 @@ export default function DeveloperPage() {
               <AlertTitle>Admin Access Granted</AlertTitle>
               <AlertDescription>
                 You have successfully authenticated to the developer section.
+                {process.env.NEXT_PUBLIC_APP_ENV && (
+                  <span className="block mt-1 text-xs">
+                    Current Environment: <strong className="text-accent">{process.env.NEXT_PUBLIC_APP_ENV.toUpperCase()}</strong>
+                  </span>
+                )}
               </AlertDescription>
             </Alert>
             
