@@ -12,12 +12,11 @@ import {
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/icons/logo";
-import { LayoutDashboard, Target, Brain, UsersRound, Lightbulb, Scan, Swords, UserSearch } from "lucide-react";
+import { LayoutDashboard, Brain, UsersRound, Lightbulb, Scan, Swords, UserSearch } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/shot-maps", label: "Shot Maps", icon: Target },
   { href: "/xt-analytics", label: "xT Analytics", icon: Brain },
   { href: "/player-comparison", label: "Player Comparison", icon: UsersRound },
   { href: "/tactical-insights", label: "Tactical Insights", icon: Lightbulb },
