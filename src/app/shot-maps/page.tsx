@@ -1,13 +1,16 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { AppHeader } from "@/components/layout/app-header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { mockTeams, mockPlayers, mockGames, mockShotEvents, Player, Team, Game, ShotEvent } from "@/lib/mock-data";
+import type { Player, Team, Game, ShotEvent } from "@/lib/mock-data"; // Type imports
+import { getTeams, getPlayers, getGames, getShotEvents } from "@/lib/data-service"; // Updated imports
 import { Button } from "@/components/ui/button";
+import { Loader2, AlertTriangle } from "lucide-react";
 
 export default function ShotMapsPage() {
   const [selectedTeam, setSelectedTeam] = useState<string | undefined>(undefined);
@@ -18,13 +21,31 @@ export default function ShotMapsPage() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [games, setGames] = useState<Game[]>([]);
   const [shots, setShots] = useState<ShotEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simulate data fetching
-    setTeams(mockTeams);
-    setPlayers(mockPlayers);
-    setGames(mockGames);
-    setShots(mockShotEvents);
+    async function loadShotMapData() {
+      setLoading(true);
+      setError(null);
+      try {
+        const [teamsData, playersData, gamesData, shotEventsData] = await Promise.all([
+          getTeams(),
+          getPlayers(),
+          getGames(),
+          getShotEvents()
+        ]);
+        setTeams(teamsData);
+        setPlayers(playersData);
+        setGames(gamesData);
+        setShots(shotEventsData);
+      } catch (e) {
+        setError((e as Error).message || "Failed to load shot map data. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadShotMapData();
   }, []);
 
   const filteredPlayers = useMemo(() => {
@@ -47,6 +68,44 @@ export default function ShotMapsPage() {
     setSelectedGame(undefined);
   };
 
+  if (loading) {
+    return (
+      <>
+        <AppHeader title="Interactive Shot Maps" />
+        <main className="flex-1 p-4 md:p-6 lg:p-8 flex items-center justify-center">
+          <Card className="shadow-lg w-full max-w-md">
+            <CardHeader className="text-center">
+              <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
+              <CardTitle className="mt-4">Loading Shot Map Data...</CardTitle>
+              <CardDescription>Hang tight, we're fetching the details.</CardDescription>
+            </CardHeader>
+          </Card>
+        </main>
+      </>
+    );
+  }
+
+  if (error) {
+    return (
+      <>
+        <AppHeader title="Interactive Shot Maps" />
+        <main className="flex-1 p-4 md:p-6 lg:p-8 flex items-center justify-center">
+          <Card className="shadow-lg w-full max-w-md border-destructive/50">
+            <CardHeader className="text-center">
+              <AlertTriangle className="mx-auto h-12 w-12 text-destructive" />
+              <CardTitle className="mt-4 text-destructive">Error Loading Data</CardTitle>
+              <CardDescription>{error}</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Button onClick={() => window.location.reload()} className="w-full">
+                    Reload Page
+                </Button>
+            </CardContent>
+          </Card>
+        </main>
+      </>
+    );
+  }
 
   return (
     <>
@@ -55,6 +114,7 @@ export default function ShotMapsPage() {
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle>Filters</CardTitle>
+             <CardDescription>{process.env.NEXT_PUBLIC_APP_ENV === 'TEST' ? 'Using mock data.' : 'Fetching live data.'}</CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
             <div>
@@ -74,7 +134,7 @@ export default function ShotMapsPage() {
             </div>
             <div>
               <Label htmlFor="player-filter">Player</Label>
-              <Select value={selectedPlayer} onValueChange={setSelectedPlayer} disabled={!selectedTeam && players.length > 0 && filteredPlayers.length === players.length}>
+              <Select value={selectedPlayer} onValueChange={setSelectedPlayer} disabled={!selectedTeam && players.length > 0 && filteredPlayers.length === players.length && !selectedTeam}>
                 <SelectTrigger id="player-filter">
                   <SelectValue placeholder="Select Player" />
                 </SelectTrigger>
@@ -113,7 +173,6 @@ export default function ShotMapsPage() {
             <CardTitle>Shot Map</CardTitle>
           </CardHeader>
           <CardContent className="relative aspect-[7/5] w-full max-w-4xl mx-auto bg-green-700 rounded-md overflow-hidden border-4 border-white">
-            {/* Placeholder for football pitch */}
             <Image
               src="https://placehold.co/1050x750/228B22/FFFFFF.png?text=Football+Pitch"
               alt="Football pitch"
@@ -121,7 +180,6 @@ export default function ShotMapsPage() {
               objectFit="cover"
               data-ai-hint="football pitch"
             />
-            {/* Draw shots */}
             {filteredShots.map(shot => (
               <div
                 key={shot.id}

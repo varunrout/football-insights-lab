@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -6,32 +7,57 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { mockPlayers, mockPlayerStats, Player, PlayerStats } from "@/lib/mock-data";
-import { ArrowUpDown, UserMinus, UserPlus } from "lucide-react";
+import type { Player, PlayerStats } from "@/lib/mock-data"; // Type imports
+import { getPlayers, getPlayerStats as fetchAllPlayerStats } from "@/lib/data-service"; // Updated imports
+import { ArrowUpDown, UserMinus, UserPlus, Loader2, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type SortableColumn = keyof Pick<PlayerStats, "playerName" | "goals" | "assists" | "xg" | "xa" | "keyPasses" | "passCompletionRate">;
 
 export default function PlayerComparisonPage() {
   const [allPlayers, setAllPlayers] = useState<Player[]>([]);
+  const [allPlayerStats, setAllPlayerStats] = useState<PlayerStats[]>([]);
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<number[]>([]);
   const [comparisonData, setComparisonData] = useState<PlayerStats[]>([]);
   const [sortConfig, setSortConfig] = useState<{ key: SortableColumn; direction: "ascending" | "descending" } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setAllPlayers(mockPlayers);
-    // Default to first two players if available
-    if (mockPlayers.length >= 1) setSelectedPlayerIds([mockPlayers[0].id]);
-    if (mockPlayers.length >= 2) setSelectedPlayerIds([mockPlayers[0].id, mockPlayers[1].id]);
+    async function loadInitialData() {
+      setLoading(true);
+      setError(null);
+      try {
+        const [playersData, playerStatsData] = await Promise.all([
+          getPlayers(),
+          fetchAllPlayerStats()
+        ]);
+        
+        setAllPlayers(playersData);
+        setAllPlayerStats(playerStatsData);
+
+        // Default to first one or two players if available
+        const initialSelectedIds: number[] = [];
+        if (playersData.length > 0) initialSelectedIds.push(playersData[0].id);
+        if (playersData.length > 1) initialSelectedIds.push(playersData[1].id);
+        setSelectedPlayerIds(initialSelectedIds);
+
+      } catch (e) {
+        setError((e as Error).message || "Failed to load player data. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadInitialData();
   }, []);
 
   useEffect(() => {
-    const data = mockPlayerStats.filter(stat => selectedPlayerIds.includes(stat.playerId));
+    const data = allPlayerStats.filter(stat => selectedPlayerIds.includes(stat.playerId));
     setComparisonData(data);
-  }, [selectedPlayerIds]);
+  }, [selectedPlayerIds, allPlayerStats]);
 
   const handleAddPlayerSlot = () => {
-    if (selectedPlayerIds.length < 5) { // Max 5 players for comparison
+    if (selectedPlayerIds.length < 5) {
       const availablePlayer = allPlayers.find(p => !selectedPlayerIds.includes(p.id));
       if (availablePlayer) {
         setSelectedPlayerIds(prev => [...prev, availablePlayer.id]);
@@ -45,9 +71,7 @@ export default function PlayerComparisonPage() {
 
   const handlePlayerSelect = (index: number, playerId: string) => {
     const newPlayerId = parseInt(playerId);
-    // Ensure player is not already selected in another slot
     if (selectedPlayerIds.some((id, i) => i !== index && id === newPlayerId)) {
-      // Optionally, show a toast message here
       return;
     }
     setSelectedPlayerIds(prev => {
@@ -63,7 +87,6 @@ export default function PlayerComparisonPage() {
       sortableItems.sort((a, b) => {
         const valA = a[sortConfig.key];
         const valB = b[sortConfig.key];
-
         if (typeof valA === 'number' && typeof valB === 'number') {
             if (valA < valB) return sortConfig.direction === 'ascending' ? -1 : 1;
             if (valA > valB) return sortConfig.direction === 'ascending' ? 1 : -1;
@@ -99,6 +122,45 @@ export default function PlayerComparisonPage() {
     </TableHead>
   );
 
+  if (loading) {
+    return (
+      <>
+        <AppHeader title="Player Comparison" />
+        <main className="flex-1 p-4 md:p-6 lg:p-8 flex items-center justify-center">
+          <Card className="shadow-lg w-full max-w-md">
+            <CardHeader className="text-center">
+              <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
+              <CardTitle className="mt-4">Loading Player Data...</CardTitle>
+              <CardDescription>Please wait while we fetch the necessary information.</CardDescription>
+            </CardHeader>
+          </Card>
+        </main>
+      </>
+    );
+  }
+
+  if (error) {
+    return (
+      <>
+        <AppHeader title="Player Comparison" />
+        <main className="flex-1 p-4 md:p-6 lg:p-8 flex items-center justify-center">
+          <Card className="shadow-lg w-full max-w-md border-destructive/50">
+            <CardHeader className="text-center">
+              <AlertTriangle className="mx-auto h-12 w-12 text-destructive" />
+              <CardTitle className="mt-4 text-destructive">Error Loading Data</CardTitle>
+              <CardDescription>{error}</CardDescription>
+            </CardHeader>
+             <CardContent>
+                <Button onClick={() => window.location.reload()} className="w-full">
+                    Reload Page
+                </Button>
+            </CardContent>
+          </Card>
+        </main>
+      </>
+    );
+  }
+
   return (
     <>
       <AppHeader title="Player Comparison" />
@@ -106,7 +168,7 @@ export default function PlayerComparisonPage() {
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle>Select Players to Compare</CardTitle>
-            <CardDescription>Choose up to 5 players. Statistics are mock data.</CardDescription>
+            <CardDescription>Choose up to 5 players. {process.env.NEXT_PUBLIC_APP_ENV === 'TEST' ? 'Using mock data.' : 'Fetching live data.'}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {selectedPlayerIds.map((selectedId, index) => (
@@ -127,7 +189,7 @@ export default function PlayerComparisonPage() {
                           value={player.id.toString()}
                           disabled={selectedPlayerIds.some((id, i) => i !== index && id === player.id)}
                         >
-                          {player.name} ({mockPlayerStats.find(s => s.playerId === player.id)?.teamName})
+                          {player.name} ({allPlayerStats.find(s => s.playerId === player.id)?.teamName || 'N/A'})
                         </SelectItem>
                       ))}
                     </SelectGroup>
@@ -140,7 +202,7 @@ export default function PlayerComparisonPage() {
                 )}
               </div>
             ))}
-            {selectedPlayerIds.length < 5 && (
+            {selectedPlayerIds.length < 5 && allPlayers.length > selectedPlayerIds.length && (
               <Button onClick={handleAddPlayerSlot} variant="outline" className="w-full">
                 <UserPlus className="mr-2 h-4 w-4" /> Add Player Slot
               </Button>
