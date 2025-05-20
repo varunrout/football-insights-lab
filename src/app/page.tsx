@@ -1,9 +1,10 @@
+
 import { AppHeader } from "@/components/layout/app-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { mockTeamPerformance, TeamPerformance } from "@/lib/mock-data";
-import { BarChart, TrendingUp, Target as TargetIcon, Shuffle, Percent } from "lucide-react";
-import { ChartContainer, ChartTooltip, ChartTooltipContent, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, BarChart as RechartsBarChart } from "@/components/ui/chart";
-import type { ChartConfig } from "@/components/ui/chart";
+import { mockTeamPerformance, type TeamPerformance } from "@/lib/mock-data";
+import { BarChart as LucideBarChartIcon, TrendingUp, Target as TargetIcon, Shuffle, Percent } from "lucide-react"; // Aliased lucide icon
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"; // Corrected imports from ui/chart
+import { BarChart as RechartsBarChartComponent, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'; // Imports from recharts, removed ResponsiveContainer
 
 const chartConfig = {
   xg: { label: "xG", color: "hsl(var(--chart-1))" },
@@ -29,7 +30,7 @@ export default function DashboardPage() {
             <Card key={team.teamId} className="shadow-lg hover:shadow-xl transition-shadow duration-300">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-lg font-medium">{team.teamName}</CardTitle>
-                <BarChart className="h-5 w-5 text-muted-foreground" />
+                <LucideBarChartIcon className="h-5 w-5 text-muted-foreground" /> {/* Updated lucide icon usage */}
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-primary">{team.xg.toFixed(2)} xG</div>
@@ -57,7 +58,7 @@ export default function DashboardPage() {
           <CardContent className="pb-4">
             <div className="h-[350px]">
               <ChartContainer config={chartConfig} className="w-full h-full">
-                <RechartsBarChart data={chartData} accessibilityLayer>
+                <RechartsBarChartComponent data={chartData} accessibilityLayer> {/* Updated Recharts component usage */}
                   <CartesianGrid vertical={false} />
                   <XAxis
                     dataKey="name"
@@ -73,7 +74,7 @@ export default function DashboardPage() {
                   <Bar dataKey="xg" fill="var(--color-xg)" radius={4} />
                   <Bar dataKey="shots" fill="var(--color-shots)" radius={4} />
                    <Bar dataKey="possession" fill="var(--color-possession)" radius={4} />
-                </RechartsBarChart>
+                </RechartsBarChartComponent>
               </ChartContainer>
             </div>
           </CardContent>
