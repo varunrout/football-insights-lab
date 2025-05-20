@@ -1,10 +1,10 @@
 
 import { AppHeader } from "@/components/layout/app-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { mockTeamPerformance, type TeamPerformance } from "@/lib/mock-data";
-import { BarChart as LucideBarChartIcon, TrendingUp, Target as TargetIcon, Shuffle, Percent } from "lucide-react"; // Aliased lucide icon
-import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"; // Corrected imports from ui/chart
-import { BarChart as RechartsBarChartComponent, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'; // Imports from recharts, removed ResponsiveContainer
+import { mockTeamPerformance } from "@/lib/mock-data";
+import { BarChart as LucideBarChartIcon, Shuffle, Percent } from "lucide-react";
+import type { ChartConfig } from "@/components/ui/chart";
+import { TeamPerformanceChart } from "@/components/charts/team-performance-chart"; // New client component
 
 const chartConfig = {
   xg: { label: "xG", color: "hsl(var(--chart-1))" },
@@ -13,7 +13,6 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export default function DashboardPage() {
-  // For simplicity, we'll use the first 4 teams for the chart
   const chartData = mockTeamPerformance.slice(0, 4).map(team => ({
     name: team.teamName.split(" ")[0], // Short name for chart label
     xg: team.xg,
@@ -30,7 +29,7 @@ export default function DashboardPage() {
             <Card key={team.teamId} className="shadow-lg hover:shadow-xl transition-shadow duration-300">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-lg font-medium">{team.teamName}</CardTitle>
-                <LucideBarChartIcon className="h-5 w-5 text-muted-foreground" /> {/* Updated lucide icon usage */}
+                <LucideBarChartIcon className="h-5 w-5 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-primary">{team.xg.toFixed(2)} xG</div>
@@ -57,25 +56,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="pb-4">
             <div className="h-[350px]">
-              <ChartContainer config={chartConfig} className="w-full h-full">
-                <RechartsBarChartComponent data={chartData} accessibilityLayer> {/* Updated Recharts component usage */}
-                  <CartesianGrid vertical={false} />
-                  <XAxis
-                    dataKey="name"
-                    tickLine={false}
-                    tickMargin={10}
-                    axisLine={false}
-                  />
-                  <YAxis />
-                  <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent indicator="dot" />}
-                  />
-                  <Bar dataKey="xg" fill="var(--color-xg)" radius={4} />
-                  <Bar dataKey="shots" fill="var(--color-shots)" radius={4} />
-                   <Bar dataKey="possession" fill="var(--color-possession)" radius={4} />
-                </RechartsBarChartComponent>
-              </ChartContainer>
+              <TeamPerformanceChart chartData={chartData} chartConfig={chartConfig} />
             </div>
           </CardContent>
         </Card>
