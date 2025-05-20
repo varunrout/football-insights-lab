@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -11,7 +12,7 @@ import {
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/icons/logo";
-import { LayoutDashboard, Target, Brain, UsersRound, Settings } from "lucide-react";
+import { LayoutDashboard, Target, Brain, UsersRound, Lightbulb, Scan, Swords, UserSearch } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -19,6 +20,10 @@ const navItems = [
   { href: "/shot-maps", label: "Shot Maps", icon: Target },
   { href: "/xt-analytics", label: "xT Analytics", icon: Brain },
   { href: "/player-comparison", label: "Player Comparison", icon: UsersRound },
+  { href: "/tactical-insights", label: "Tactical Insights", icon: Lightbulb },
+  { href: "/positional-analysis", label: "Positional Analysis", icon: Scan },
+  { href: "/match-up-analysis", label: "Match-Up Analysis", icon: Swords },
+  { href: "/player-analysis", label: "Player Analysis", icon: UserSearch },
 ];
 
 export function AppSidebar() {
@@ -38,11 +43,11 @@ export function AppSidebar() {
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
                 asChild
-                isActive={pathname === item.href}
+                isActive={pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))}
                 tooltip={{ children: item.label, className: "ml-1" }}
                 className={cn(
                   "justify-start",
-                  pathname === item.href && "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90 hover:text-sidebar-primary-foreground"
+                  (pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))) && "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90 hover:text-sidebar-primary-foreground"
                 )}
               >
                 <Link href={item.href}>
