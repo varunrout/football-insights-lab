@@ -7,13 +7,18 @@ export async function GET() {
   const pythonBackendBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   try {
-    if (appEnv !== 'TEST') {
+    if (appEnv === 'TEST') {
+      // Use mock data for TEST environment
+      await new Promise(resolve => setTimeout(resolve, 50 + Math.random() * 100));
+      return NextResponse.json(mockTeamPerformance);
+    } else {
+      // Fetch from Python backend for TEST_BACKEND, DEV, QUAL, PROD, etc.
       if (!pythonBackendBaseUrl) {
         console.error('Error: NEXT_PUBLIC_API_BASE_URL is not defined for Python backend.');
         return NextResponse.json({ message: 'Python API base URL not configured' }, { status: 500 });
       }
-      const backendUrl = `${pythonBackendBaseUrl}/api/team-performance`; // Assuming Python endpoint is /api/team-performance
-      // console.log(`Fetching from Python backend: ${backendUrl}`);
+      const backendUrl = `${pythonBackendBaseUrl}/api/team-performance`;
+      // console.log(`Fetching from Python backend: ${backendUrl} (AppEnv: ${appEnv})`);
       const response = await fetch(backendUrl, { cache: 'no-store' });
       if (!response.ok) {
         const errorText = await response.text();
@@ -22,9 +27,6 @@ export async function GET() {
       }
       const data = await response.json();
       return NextResponse.json(data);
-    } else {
-      await new Promise(resolve => setTimeout(resolve, 50 + Math.random() * 100));
-      return NextResponse.json(mockTeamPerformance);
     }
   } catch (error) {
     console.error('Error in Next.js /api/team-performance route:', error);
