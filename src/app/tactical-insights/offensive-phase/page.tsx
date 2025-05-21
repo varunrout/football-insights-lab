@@ -11,6 +11,7 @@ import type { Player, Team, Game, ShotEvent } from "@/lib/mock-data"; // Type im
 import { getTeams, getPlayers, getGames, getShotEvents } from "@/lib/data-service";
 import { Button } from "@/components/ui/button";
 import { Loader2, AlertTriangle } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export default function OffensivePhasePage() {
   const [selectedTeam, setSelectedTeam] = useState<string | undefined>(undefined);
@@ -58,8 +59,6 @@ export default function OffensivePhasePage() {
       const teamMatch = selectedTeam ? shot.teamId === parseInt(selectedTeam) : true;
       const playerMatch = selectedPlayer ? shot.playerId === parseInt(selectedPlayer) : true;
       const gameMatch = selectedGame ? shot.gameId === parseInt(selectedGame) : true;
-      // Additional filter for offensive phase, e.g., playPattern - assuming all shots are relevant for now
-      // const playPhaseMatch = shot.playPattern === "Open Play" || shot.playPattern === "Fast Break"; 
       return teamMatch && playerMatch && gameMatch;
     });
   }, [selectedTeam, selectedPlayer, selectedGame, shots]);
@@ -69,6 +68,13 @@ export default function OffensivePhasePage() {
     setSelectedPlayer(undefined);
     setSelectedGame(undefined);
   };
+
+  // Placeholder data for Top Chance Creators table
+  const topChanceCreatorsData = [
+    { playerName: "Kevin De Bruyne", teamName: "Manchester City", keyPasses: 90, keyPassesP90: 3.5, xA: 12.5, xAP90: 0.48, actualAssists: 14 },
+    { playerName: "Lionel Messi", teamName: "Paris Saint-Germain", keyPasses: 85, keyPassesP90: 3.2, xA: 11.8, xAP90: 0.45, actualAssists: 12 },
+    { playerName: "Bruno Fernandes", teamName: "Manchester United", keyPasses: 80, keyPassesP90: 3.0, xA: 10.2, xAP90: 0.40, actualAssists: 10 },
+  ];
 
   if (loading) {
     return (
@@ -174,13 +180,13 @@ export default function OffensivePhasePage() {
 
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle>Offensive Shot Map</CardTitle>
-            <CardDescription>Visualizing shot locations, outcomes, and xG values for offensive actions.</CardDescription>
+            <CardTitle>Integrated Offensive Shot Map</CardTitle>
+            <CardDescription>Visualizing shot locations, outcomes, and xG values for offensive actions. Filterable by play phase/player.</CardDescription>
           </CardHeader>
           <CardContent className="relative aspect-[7/5] w-full max-w-4xl mx-auto bg-green-700 rounded-md overflow-hidden border-4 border-white">
             <Image
               src="https://placehold.co/1050x750/228B22/FFFFFF.png?text=Football+Pitch"
-              alt="Football pitch"
+              alt="Football pitch for shot map"
               layout="fill"
               objectFit="cover"
               data-ai-hint="football pitch"
@@ -214,21 +220,98 @@ export default function OffensivePhasePage() {
         
         <Card className="shadow-lg">
             <CardHeader>
-                <CardTitle>Other Offensive Phase Visuals</CardTitle>
-                <CardDescription>Placeholders for xG vs Actual Goals, Heatmaps, Pass Networks, etc.</CardDescription>
+                <CardTitle>xG vs Actual Goals Summary</CardTitle>
+                <CardDescription>Bar chart or table comparing expected goals (xG) with actual goals scored for the selected team or period.</CardDescription>
             </CardHeader>
             <CardContent>
-                <p>Further offensive phase analytics will be displayed here, including:</p>
-                <ul className="list-disc list-inside mt-2 space-y-1 text-sm text-muted-foreground">
-                  <li>xG (Expected Goals) vs Actual Goals summary (bar chart or table).</li>
-                  <li>Heatmap of touches/actions in the attacking third.</li>
-                  <li>Pass network visualization focused on the final third (nodes as players, edges as passes, sized by volume).</li>
-                  <li>Progressive pass/carry maps originating from different pitch zones.</li>
-                  <li>Table of top chance creators (Key Passes, xA - Expected Assists).</li>
-                </ul>
+                <p className="text-sm text-muted-foreground mb-4">A visual comparison (e.g., bar chart) will be implemented here to show xG vs Actual Goals.</p>
+                <div className="aspect-video bg-muted rounded-md flex items-center justify-center">
+                   <Image src="https://placehold.co/600x338.png" alt="Placeholder for xG vs Actual Goals chart" width={600} height={338} data-ai-hint="bar chart goals" className="rounded-md" />
+                </div>
             </CardContent>
         </Card>
+
+        <Card className="shadow-lg">
+            <CardHeader>
+                <CardTitle>Attacking Third Activity Heatmap</CardTitle>
+                <CardDescription>Heatmap visualizing player touches or specific actions within the attacking third of the pitch.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">A heatmap showing areas of high activity in the attacking third will be displayed here.</p>
+                <div className="aspect-video bg-muted rounded-md flex items-center justify-center">
+                    <Image src="https://placehold.co/600x338.png" alt="Placeholder for Attacking Third Heatmap" width={600} height={338} data-ai-hint="heatmap football pitch" className="rounded-md" />
+                </div>
+            </CardContent>
+        </Card>
+
+        <Card className="shadow-lg">
+            <CardHeader>
+                <CardTitle>Final Third Pass Network</CardTitle>
+                <CardDescription>Network visualization showing pass connections between players primarily operating in the final third.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">A pass network graph (nodes as players, edges as passes) for the final third will be implemented here.</p>
+                 <div className="aspect-video bg-muted rounded-md flex items-center justify-center">
+                    <Image src="https://placehold.co/600x338.png" alt="Placeholder for Pass Network" width={600} height={338} data-ai-hint="network graph connections" className="rounded-md" />
+                </div>
+            </CardContent>
+        </Card>
+
+        <Card className="shadow-lg">
+            <CardHeader>
+                <CardTitle>Progressive Pass/Carry Maps</CardTitle>
+                <CardDescription>Maps visualizing progressive passes and carries originating from different pitch zones, highlighting ball progression.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">Maps showing the paths of progressive passes and carries will be displayed here.</p>
+                 <div className="aspect-video bg-muted rounded-md flex items-center justify-center">
+                    <Image src="https://placehold.co/600x338.png" alt="Placeholder for Progressive Actions Map" width={600} height={338} data-ai-hint="football pitch arrows" className="rounded-md" />
+                </div>
+            </CardContent>
+        </Card>
+
+        <Card className="shadow-lg">
+            <CardHeader>
+                <CardTitle>Top Chance Creators</CardTitle>
+                <CardDescription>Table ranking players by Key Passes and Expected Assists (xA), highlighting top playmakers.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Player Name</TableHead>
+                            <TableHead>Team</TableHead>
+                            <TableHead className="text-right">Key Passes</TableHead>
+                            <TableHead className="text-right">KP P90</TableHead>
+                            <TableHead className="text-right">xA</TableHead>
+                            <TableHead className="text-right">xA P90</TableHead>
+                            <TableHead className="text-right">Assists</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {topChanceCreatorsData.map((player, index) => (
+                        <TableRow key={index}>
+                            <TableCell className="font-medium">{player.playerName}</TableCell>
+                            <TableCell>{player.teamName}</TableCell>
+                            <TableCell className="text-right">{player.keyPasses}</TableCell>
+                            <TableCell className="text-right">{player.keyPassesP90.toFixed(2)}</TableCell>
+                            <TableCell className="text-right">{player.xA.toFixed(2)}</TableCell>
+                            <TableCell className="text-right">{player.xAP90.toFixed(2)}</TableCell>
+                            <TableCell className="text-right">{player.actualAssists}</TableCell>
+                        </TableRow>
+                        ))}
+                         {topChanceCreatorsData.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={7} className="text-center text-muted-foreground">No chance creator data available.</TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </CardContent>
+        </Card>
+
       </main>
     </>
   );
 }
+
