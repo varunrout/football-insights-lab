@@ -12,7 +12,7 @@ export async function GET() {
         console.error('Error: NEXT_PUBLIC_API_BASE_URL is not defined for Python backend.');
         return NextResponse.json({ message: 'Python API base URL not configured' }, { status: 500 });
       }
-      const backendUrl = `${pythonBackendBaseUrl}/api/player-stats`; // Assuming Python endpoint is /api/player-stats
+      const backendUrl = `${pythonBackendBaseUrl}/api/player_stats`; // Assuming Python endpoint is /api/player-stats
       // console.log(`Fetching from Python backend: ${backendUrl}`);
       const response = await fetch(backendUrl, { cache: 'no-store' });
       if (!response.ok) {
